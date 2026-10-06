@@ -168,3 +168,8 @@
 /(vendor|system/vendor)/bin/hw/android\.hardware\.light@2\.0-service\.samsung               u:object_r:hal_light_default_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.biometrics\.fingerprint@2\.1-service\.samsung u:object_r:hal_fingerprint_default_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.power@1\.0-service\.exynos                u:object_r:hal_power_default_exec:s0
+
+# camera sysfs / data
+/sys/devices/virtual/camera(/.*)?   u:object_r:sysfs_camera:s0
+/sys/class/camera(/.*)?             u:object_r:sysfs_camera:s0
+/data/camera(/.*)?                  u:object_r:camera_data_file:s0
