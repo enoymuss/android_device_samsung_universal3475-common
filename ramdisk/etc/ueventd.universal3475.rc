@@ -189,3 +189,10 @@
 # Fingerprint Sensor
 /dev/vfsspi        0660   system     system
 /dev/esfp0         0660   system     system
+
+# camera / jpeg
+/dev/m2m1shot_jpeg        0660   cameraserver   media
+/dev/video16              0660   system         system
+/dev/video25              0660   media          graphics
+/dev/video36              0660   media          media
+/dev/video37              0660   media          media
