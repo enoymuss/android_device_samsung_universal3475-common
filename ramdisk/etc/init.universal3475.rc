@@ -815,3 +815,15 @@ service sswap /vendor/bin/sswap -s -f 1024
       user root
       group root
       oneshot
+
+service vendor.camera-provider-2-4 /vendor/bin/hw/android.hardware.camera.provider@2.4-service
+    override
+    class hal
+    user cameraserver
+    group audio camera input drmrpc system radio media_rw
+    ioprio rt 4
+    capabilities SYS_NICE
+    writepid /dev/cpuset/camera-daemon/tasks /dev/stune/top-app/tasks
+
+on post-fs-data
+    mkdir /data/camera 0770 cameraserver camera
