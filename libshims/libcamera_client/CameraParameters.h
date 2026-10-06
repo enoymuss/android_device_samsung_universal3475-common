@@ -27,6 +27,7 @@ public:
 	static const char EFFECT_VINTAGE_COLD[];
 	static const char EFFECT_VINTAGE_WARM[];
 	static const char EFFECT_WASHED[];
+	static const char KEY_ISO[];
 	static const char ISO_AUTO[];
 	static const char ISO_NIGHT[];
 	static const char ISO_SPORTS[];
