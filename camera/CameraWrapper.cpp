@@ -23,6 +23,55 @@
 #include "CameraWrapper.h"
 #include "Camera2Wrapper.h"
 
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+/*
+ * j2lte: the legacy Exynos camera HAL leaves /dev/video101 (and/or video102)
+ * open after get_number_of_cameras()/get_camera_info() probing. The FIMC-IS
+ * driver then refuses every real open with "already open" (-24 / EMFILE).
+ * Close those leaked fds, but only before the first real camera open so we
+ * never touch a live camera.
+ */
+static bool gAnyCameraOpened = false;
+
+static void close_leaked_video_fds(const char *why)
+{
+    if (gAnyCameraOpened)
+        return;
+
+    DIR *d = opendir("/proc/self/fd");
+    if (!d)
+        return;
+
+    int dfd = dirfd(d);
+    struct dirent *e;
+    while ((e = readdir(d)) != NULL) {
+        if (e->d_name[0] == '.')
+            continue;
+        int fd = atoi(e->d_name);
+        if (fd == dfd)
+            continue;
+
+        char link[64];
+        char target[128];
+        snprintf(link, sizeof(link), "/proc/self/fd/%d", fd);
+        ssize_t n = readlink(link, target, sizeof(target) - 1);
+        if (n <= 0)
+            continue;
+        target[n] = '\0';
+
+        if (!strcmp(target, "/dev/video101") || !strcmp(target, "/dev/video102")) {
+            ALOGW("%s: closing leaked fd %d (%s)", why, fd, target);
+            close(fd);
+        }
+    }
+    closedir(d);
+}
+
 static int camera_device_open(const hw_module_t* module, const char* name,
                 hw_device_t** device);
 static int camera_get_number_of_cameras(void);
@@ -82,6 +131,7 @@ static int camera_device_open(const hw_module_t* module, const char* name,
     if (name != NULL) {
         if (check_vendor_module())
             return -EINVAL;
+        gAnyCameraOpened = true;
         rv = camera2_device_open(module, name, device);
     }
 
@@ -93,7 +143,9 @@ static int camera_get_number_of_cameras(void)
     ALOGV("%s", __FUNCTION__);
     if (check_vendor_module())
         return 0;
-    return gVendorModule->get_number_of_cameras();
+    int n = gVendorModule->get_number_of_cameras();
+    close_leaked_video_fds("get_number_of_cameras");
+    return n;
 }
 
 static int camera_get_camera_info(int camera_id, struct camera_info *info)
@@ -101,7 +153,9 @@ static int camera_get_camera_info(int camera_id, struct camera_info *info)
     ALOGV("%s", __FUNCTION__);
     if (check_vendor_module())
         return 0;
-    return gVendorModule->get_camera_info(camera_id, info);
+    int r = gVendorModule->get_camera_info(camera_id, info);
+    close_leaked_video_fds("get_camera_info");
+    return r;
 }
 
 static int camera_set_callbacks(const camera_module_callbacks_t *callbacks)
