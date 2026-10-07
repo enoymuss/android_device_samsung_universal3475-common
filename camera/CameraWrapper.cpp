@@ -37,11 +37,14 @@
  * never touch a live camera.
  */
 static bool gAnyCameraOpened = false;
+#define J2_WRAPPER_BUILD "j2lte-fdfix-v2"
 
 static void close_leaked_video_fds(const char *why)
 {
     if (gAnyCameraOpened)
         return;
+
+    ALOGW("[%s] sweep for leaked video fds (%s)", J2_WRAPPER_BUILD, why);
 
     DIR *d = opendir("/proc/self/fd");
     if (!d)
@@ -94,6 +97,8 @@ static int check_vendor_module()
     rv = hw_get_module_by_class("camera", "vendor", (const hw_module_t **)&gVendorModule);
     if (rv)
         ALOGE("failed to open vendor camera module");
+    else
+        close_leaked_video_fds("load_vendor_module");
     return rv;
 }
 
@@ -131,6 +136,7 @@ static int camera_device_open(const hw_module_t* module, const char* name,
     if (name != NULL) {
         if (check_vendor_module())
             return -EINVAL;
+        close_leaked_video_fds("pre-open");
         gAnyCameraOpened = true;
         rv = camera2_device_open(module, name, device);
     }
@@ -163,7 +169,9 @@ static int camera_set_callbacks(const camera_module_callbacks_t *callbacks)
     ALOGV("%s", __FUNCTION__);
     if (check_vendor_module())
         return 0;
-    return gVendorModule->set_callbacks(callbacks);
+    int r = gVendorModule->set_callbacks(callbacks);
+    close_leaked_video_fds("set_callbacks");
+    return r;
 }
 
 static void camera_get_vendor_tag_ops(vendor_tag_ops_t* ops)
@@ -171,7 +179,8 @@ static void camera_get_vendor_tag_ops(vendor_tag_ops_t* ops)
     ALOGV("%s", __FUNCTION__);
     if (check_vendor_module())
         return;
-    return gVendorModule->get_vendor_tag_ops(ops);
+    gVendorModule->get_vendor_tag_ops(ops);
+    close_leaked_video_fds("get_vendor_tag_ops");
 }
 
 static int camera_open_legacy(const struct hw_module_t* module, const char* id, uint32_t halVersion, struct hw_device_t** device)
@@ -180,6 +189,8 @@ static int camera_open_legacy(const struct hw_module_t* module, const char* id, 
     ALOGV("%s", __FUNCTION__);
     if (check_vendor_module())
         return 0;
+    close_leaked_video_fds("pre-open-legacy");
+    gAnyCameraOpened = true;
     return camera2_device_open(module, id, device);
 }
 
