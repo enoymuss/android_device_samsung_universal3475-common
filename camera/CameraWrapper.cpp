@@ -37,7 +37,18 @@
  * never touch a live camera.
  */
 static bool gAnyCameraOpened = false;
-#define J2_WRAPPER_BUILD "j2lte-fdfix-v2"
+
+/*
+ * j2lte: both sensors share the fimc-lite0 IRQ. Opening the second camera while
+ * the first is open fails (request_irq -16) and leaves the first one stuck.
+ * Tell the framework the two cameras conflict, so cameraserver closes one
+ * before opening the other.
+ */
+static char gConflictWith0[] = "0";
+static char gConflictWith1[] = "1";
+static char *gConflictsOfCam0[] = { gConflictWith1 };  /* camera 0 conflicts with 1 */
+static char *gConflictsOfCam1[] = { gConflictWith0 };  /* camera 1 conflicts with 0 */
+#define J2_WRAPPER_BUILD "j2lte-fdfix-v3"
 
 static void close_leaked_video_fds(const char *why)
 {
@@ -161,6 +172,10 @@ static int camera_get_camera_info(int camera_id, struct camera_info *info)
         return 0;
     int r = gVendorModule->get_camera_info(camera_id, info);
     close_leaked_video_fds("get_camera_info");
+    if (r == 0 && info != NULL && (camera_id == 0 || camera_id == 1)) {
+        info->conflicting_devices = (camera_id == 0) ? gConflictsOfCam0 : gConflictsOfCam1;
+        info->conflicting_devices_length = 1;
+    }
     return r;
 }
 
