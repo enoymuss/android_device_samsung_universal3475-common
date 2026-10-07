@@ -27,6 +27,80 @@
 #include "Camera2Wrapper.h"
 #include "CallbackWorkerThread.h"
 
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*
+ * j2lte: after the vendor HAL reports a camera as closed, it leaves the FIMC-IS
+ * video node (/dev/video101 = camera 0, /dev/video102 = camera 1) open. The
+ * kernel then keeps the sensor and the shared fimc-lite0 IRQ busy, so every
+ * following open fails ("already open" -24 / request_irq -16).
+ * After the vendor close we wait briefly for an asynchronous close inside the
+ * HAL and, if the fd is still there, close it ourselves.
+ */
+#define J2_FDFIX_BUILD "j2lte-fdfix-v4"
+
+static const char *j2_node_for_camera(int id)
+{
+    if (id == 0) return "/dev/video101";
+    if (id == 1) return "/dev/video102";
+    return NULL;
+}
+
+static int j2_find_node_fd(const char *node)
+{
+    DIR *d = opendir("/proc/self/fd");
+    if (!d)
+        return -1;
+
+    int dfd = dirfd(d);
+    int found = -1;
+    struct dirent *e;
+    while ((e = readdir(d)) != NULL) {
+        if (e->d_name[0] == '.')
+            continue;
+        int fd = atoi(e->d_name);
+        if (fd == dfd)
+            continue;
+
+        char link[64];
+        char target[128];
+        snprintf(link, sizeof(link), "/proc/self/fd/%d", fd);
+        ssize_t n = readlink(link, target, sizeof(target) - 1);
+        if (n <= 0)
+            continue;
+        target[n] = '\0';
+        if (!strcmp(target, node)) {
+            found = fd;
+            break;
+        }
+    }
+    closedir(d);
+    return found;
+}
+
+static void j2_release_leaked_node_fd(int id, const char *why)
+{
+    const char *node = j2_node_for_camera(id);
+    if (!node)
+        return;
+
+    /* up to ~500 ms for the HAL to close it by itself */
+    for (int i = 0; i < 50; i++) {
+        if (j2_find_node_fd(node) < 0)
+            return;
+        usleep(10000);
+    }
+
+    int fd = j2_find_node_fd(node);
+    if (fd >= 0) {
+        ALOGW("[%s] %s: closing leaked fd %d (%s)", J2_FDFIX_BUILD, why, fd, node);
+        close(fd);
+    }
+}
+
 CallbackWorkerThread cbThread;
 
 #include <sys/time.h>
@@ -508,6 +582,7 @@ static int camera2_dump(struct camera_device * device, int fd)
 static int camera2_device_close(hw_device_t* device)
 {
     int ret = 0;
+    int cam_id = -1;
     wrapper_camera2_device_t *wrapper_dev = NULL;
 
     ALOGV("%s", __FUNCTION__);
@@ -520,11 +595,13 @@ static int camera2_device_close(hw_device_t* device)
     }
 
     wrapper_dev = (wrapper_camera2_device_t*) device;
+    cam_id = wrapper_dev->id;
 
     wrapper_dev->vendor->common.close((hw_device_t*)wrapper_dev->vendor);
     if (wrapper_dev->base.ops)
         free(wrapper_dev->base.ops);
     free(wrapper_dev);
+    j2_release_leaked_node_fd(cam_id, "close");
 done:
     gPreviewWindow = 0;
     gPreviewStartDeferred = false;
@@ -590,6 +667,7 @@ int camera2_device_open(const hw_module_t* module, const char* name,
         if (rv)
         {
             ALOGE("vendor camera open fail");
+            j2_release_leaked_node_fd(cameraid, "open-fail");
             goto fail;
         }
         ALOGV("%s: got vendor camera device 0x%08X", __FUNCTION__, (uintptr_t)(camera2_device->vendor));
