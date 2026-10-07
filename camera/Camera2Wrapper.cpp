@@ -22,6 +22,8 @@
 
 #include <unistd.h>
 #include <stdatomic.h>
+#include <dirent.h>
+#include <string.h>
 
 #include "CameraWrapper.h"
 #include "Camera2Wrapper.h"
@@ -544,6 +546,35 @@ done:
  * assume camera service will keep singleton of each camera
  * so this function will always only be called once per camera instance
  */
+/* Vendor HAL sensör yoklaması sırasında /dev/video10x'i açık bırakıyor.
+ * FIMC-IS sürücüsü node'u ikinci kez açtırmıyor (-EMFILE), bu yüzden gerçek
+ * open başarısız oluyor. Cihazı açmadan hemen önce bu artık fd'leri kapat. */
+static void close_stale_camera_fds()
+{
+    DIR *d = opendir("/proc/self/fd");
+    if (!d)
+        return;
+    int dfd = dirfd(d);
+    struct dirent *e;
+    while ((e = readdir(d)) != NULL) {
+        if (e->d_name[0] == '.')
+            continue;
+        int fd = atoi(e->d_name);
+        if (fd == dfd)
+            continue;
+        char link[64], target[128];
+        snprintf(link, sizeof(link), "/proc/self/fd/%d", fd);
+        ssize_t n = readlink(link, target, sizeof(target) - 1);
+        if (n <= 0)
+            continue;
+        target[n] = 0;
+        if (strncmp(target, "/dev/video1", 11) == 0) {
+            ALOGW("%s: closing stale fd %d -> %s", __FUNCTION__, fd, target);
+            close(fd);
+        }
+    }
+    closedir(d);
+}
 
 int camera2_device_open(const hw_module_t* module, const char* name,
                 hw_device_t** device)
