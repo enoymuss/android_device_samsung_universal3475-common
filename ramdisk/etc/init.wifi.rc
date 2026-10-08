@@ -82,9 +82,3 @@ on property:init.svc.macloader=stopped
 #    class main
 #    disabled
 #    oneshot
-
-on property:init.svc.hostapd=running
-    write /sys/module/dhd/parameters/firmware_path /vendor/etc/wifi/bcmdhd_apsta.bin
-
-on property:init.svc.hostapd=stopped
-    write /sys/module/dhd/parameters/firmware_path /vendor/etc/wifi/bcmdhd_sta.bin
