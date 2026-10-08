@@ -23,8 +23,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.secure=0 \
     ro.adb.secure=0 \
     ro.debuggable=1 \
-    persist.service.adb.enable=1 \
-    persist.service.debuggable=1 \
+    persist.service.adb.enable=0 \
+    persist.service.debuggable=0 \
     persist.sys.usb.config=mtp,adb
 
 
