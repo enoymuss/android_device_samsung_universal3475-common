@@ -196,3 +196,5 @@
 /dev/video25              0660   media          graphics
 /dev/video36              0660   media          media
 /dev/video37              0660   media          media
+# alarm
+/dev/alarm    0664   system   radio
