@@ -1,0 +1,17 @@
+# Legacy (pre-Treble) exynos3475 blobs/daemons use core /data paths, core
+# sockets and system binder, so they must be exempted from the Android 10
+# Treble neverallow rules. This is the same approach other legacy
+# LineageOS 17.1 devices use.
+
+
+typeattribute rild                  data_between_core_and_vendor_violators;
+typeattribute rild                  socket_between_core_and_vendor_violators;
+
+typeattribute hal_drm_default       data_between_core_and_vendor_violators;
+typeattribute hal_gnss_default      data_between_core_and_vendor_violators;
+typeattribute hal_fingerprint_default data_between_core_and_vendor_violators;
+typeattribute hal_wifi_default      data_between_core_and_vendor_violators;
+typeattribute tee                   data_between_core_and_vendor_violators;
+
+# gpsd, wifiloader and macloader are exempted in their own .te files
+# (their types are declared there, and typeattribute needs the type first).
