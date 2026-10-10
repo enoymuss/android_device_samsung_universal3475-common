@@ -12,7 +12,8 @@ allow system_server debugfs_ion:file r_file_perms;
 # storaged (platform domain, private type): per AOSP, vendors label the
 # block stat file as sysfs_disk_stat (see genfs_contexts), storaged already
 # has access to it.
-
+allow system_app debugfs_mali:dir search;
+allow system_app debugfs_ion:dir search;
 # Settings: /proc/pagetypeinfo
 allow system_app proc_pagetypeinfo:file r_file_perms;
 
