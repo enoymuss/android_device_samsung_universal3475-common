@@ -138,3 +138,6 @@ genfscon sysfs /devices/gpio_keys.24/input                  u:object_r:sysfs_inp
 
 # Mali debugfs
 genfscon debugfs /mali u:object_r:debugfs_mali:s0
+
+# storaged reads this (AOSP: vendors must label it sysfs_disk_stat)
+genfscon sysfs /devices/13540000.dwmmc0/mmc_host/mmc0/mmc0:0001/block/mmcblk0/stat u:object_r:sysfs_disk_stat:s0
