@@ -16,7 +16,7 @@ allow system_app debugfs_mali:dir search;
 allow system_app debugfs_ion:dir search;
 # Settings: /proc/pagetypeinfo
 allow system_app proc_pagetypeinfo:file r_file_perms;
-
+allow storaged sysfs_mmc:dir search;
 # priv_app: /sys/devices/virtual/android_usb/android0/state
 allow priv_app sysfs_android_usb:file { open getattr };
 
