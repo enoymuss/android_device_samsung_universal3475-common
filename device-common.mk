@@ -20,12 +20,12 @@ DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
 # ADB Insecure
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.secure=1 \
-    ro.adb.secure=1 \
-    ro.debuggable=0 \
-    persist.service.adb.enable=0 \
-    persist.service.debuggable=0 \
-    persist.sys.usb.config=mtp
+    ro.secure=0 \
+    ro.adb.secure=0 \
+    ro.debuggable=1 \
+    persist.service.adb.enable=1 \
+    persist.service.debuggable=1 \
+    persist.sys.usb.config=mtp,adb
 
 
 PRODUCT_COPY_FILES += \
