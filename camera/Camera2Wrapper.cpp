@@ -121,7 +121,7 @@ static char * camera2_fixup_setparams(int id, const char * settings) {
         int minFps = 0, maxFps = 0;
         params.getPreviewFpsRange(&minFps, &maxFps);
         if (maxFps > 0 && maxFps < 15000) {
-            params.setPreviewFpsRange(15000, 30000);
+            params.set(android::CameraParameters::KEY_PREVIEW_FPS_RANGE, "15000,30000");
             params.setPreviewFrameRate(30);
         }
     }
