@@ -1,0 +1,23 @@
+# Fixes from permissive-boot avc denials (j2lte, Oct 2026)
+
+# rild: /dev/alarm ioctl 0x6134
+allow rild alarm_device:chr_file rw_file_perms;
+allowxperm rild alarm_device:chr_file ioctl { 0x6100-0x61ff };
+
+# system_server: memtrack HAL reads /sys/kernel/debug/ion/clients/*
+type debugfs_ion, fs_type, debugfs_type;
+allow system_server debugfs_ion:dir r_dir_perms;
+allow system_server debugfs_ion:file r_file_perms;
+
+# storaged: /sys/devices/13540000.dwmmc0/.../mmcblk0/stat
+allow storaged sysfs_mmc:dir search;
+allow storaged sysfs_mmc:file r_file_perms;
+
+# Settings: /proc/pagetypeinfo
+allow system_app proc_pagetypeinfo:file r_file_perms;
+
+# priv_app: /sys/devices/virtual/android_usb/android0/state
+allow priv_app sysfs_android_usb:file { open getattr };
+
+# gpsd -> system_suspend (wakelocks)
+binder_call(gpsd, system_suspend)

@@ -1,0 +1,29 @@
+# /vendor/bin/macloader - writes the Wi-Fi MAC address (init.wifi.rc)
+type macloader, domain;
+type macloader_exec, exec_type, file_type, vendor_file_type;
+
+init_daemon_domain(macloader)
+
+allow macloader proc:file r_file_perms;
+allow macloader proc_cmdline:file r_file_perms;
+allow macloader proc_dt_firmware:dir search;
+allow macloader proc_dt_firmware:file r_file_perms;
+
+# /efs/wifi/.mac.info
+allow macloader efs_file:dir search;
+allow macloader wifi_efs_file:dir rw_dir_perms;
+allow macloader wifi_efs_file:file create_file_perms;
+
+# /data/.cid.info, /data/.rev, /data/.psm.info ...
+allow macloader wifi_data_file:file create_file_perms;
+allow macloader system_data_file:dir rw_dir_perms;
+allow macloader self:capability { chown fowner fsetid };
+
+# /sys/module/dhd/parameters/*
+allow macloader sysfs_wifi:file rw_file_perms;
+allow macloader sysfs_wlan_fwpath:file rw_file_perms;
+
+set_prop(macloader, wifi_prop)
+
+# Treble violators (legacy blobs)
+typeattribute macloader             data_between_core_and_vendor_violators;

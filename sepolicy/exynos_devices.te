@@ -1,0 +1,19 @@
+# Access rules for the Exynos3475 device nodes labelled in file_contexts.
+# NOTE: starting point derived from ueventd/init rc owners; refine with
+# real avc denials from the device (see README).
+
+# /dev/ump, /dev/fimg2d, /dev/exynos-mem, /dev/HPD  (graphics / HWC / GScaler)
+allow { surfaceflinger hal_graphics_composer_default hal_graphics_allocator_default } {
+  ump_device fimg2d_device exynos_mem_device hpd_device
+}:chr_file rw_file_perms;
+
+allow { mediacodec mediaserver cameraserver hal_camera_default } {
+  ump_device fimg2d_device exynos_mem_device
+}:chr_file rw_file_perms;
+
+# /dev/seiren (audio DSP)
+allow { audioserver mediaserver } seiren_device:chr_file rw_file_perms;
+
+# /dev/tzdev, /dev/tuihw, /dev/tzirs, /dev/ionfd2phys (TrustZone / TUI)
+allow tee tz_device:chr_file rw_file_perms;
+allow { hal_fingerprint_default hal_drm_default mediaserver } tz_device:chr_file rw_file_perms;
