@@ -16,7 +16,7 @@ allow gpsd system_suspend_hwservice:hwservice_manager find;
 allow vold sec_efs_file:dir r_dir_perms;
 allow sswap sysfs_disk_stat:dir search;
 allow sswap sysfs:file r_file_perms;
-allow macloader self:capability dac_override;
+dontaudit macloader self:capability dac_override;
 dontaudit vold hal_bootctl_hwservice:hwservice_manager find;
 
 
