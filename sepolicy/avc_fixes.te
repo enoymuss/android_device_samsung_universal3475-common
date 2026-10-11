@@ -16,6 +16,7 @@ allow system_server debugfs_mali:dir r_dir_perms;
 allow system_server debugfs_mali:file r_file_perms;
 allow system_server debugfs_ion:dir r_dir_perms;
 allow system_server debugfs_ion:file r_file_perms;
+allow init sysfs_wifi:file w_file_perms;
 
 # rild: /dev/alarm ioctl 0x6134
 allow rild alarm_device:chr_file rw_file_perms;
