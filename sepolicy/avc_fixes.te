@@ -3,6 +3,7 @@
 # ---- types ----
 type debugfs_ion, fs_type, debugfs_type;
 type debugfs_mali, fs_type, debugfs_type;
+allow init selinuxfs:file w_file_perms;
 
 # wificond: /efs/wifi/.mac.info
 allow wificond efs_file:dir search;
