@@ -6,6 +6,18 @@ type debugfs_mali, fs_type, debugfs_type;
 allow init selinuxfs:file w_file_perms;
 allow rild system_data_file:lnk_file r_file_perms;
 dontaudit domain mediaserver_exec:file { getattr read open };
+allow { surfaceflinger bootanim mediacodec hal_graphics_allocator_default cameraserver hal_camera_default } debugfs_mali:dir search;
+allow { surfaceflinger bootanim mediacodec hal_graphics_allocator_default cameraserver hal_camera_default } debugfs_ion:dir search;
+allow hwservicemanager gpsd:dir search;
+allow hwservicemanager gpsd:file r_file_perms;
+allow hwservicemanager gpsd:process getattr;
+allow hwservicemanager gpsd:binder transfer;
+allow gpsd system_suspend_hwservice:hwservice_manager find;
+allow vold sec_efs_file:dir r_dir_perms;
+allow sswap sysfs_disk_stat:dir search;
+allow sswap sysfs:file r_file_perms;
+allow macloader self:capability dac_override;
+dontaudit vold hal_bootctl_hwservice:hwservice_manager find;
 
 
 # wificond: /efs/wifi/.mac.info
