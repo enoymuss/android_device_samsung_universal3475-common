@@ -98,6 +98,7 @@
 /data/gps/ctrlpipe                                   u:object_r:gps_data_file:s0
 /data/gps/\.gpslogd\.pipe                            u:object_r:gps_data_file:s0
 /data/gps/nmeapipe                                   u:object_r:gps_data_file:s0
+/sys/devices/139c0000.pinctrl/gpio/gpio80/value     u:object_r:sysfs_gps:s0
 
 /data/biometrics(/.*)?       u:object_r:fingerprintd_data_file:s0
 
