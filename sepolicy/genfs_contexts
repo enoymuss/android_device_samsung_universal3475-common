@@ -7,7 +7,8 @@ genfscon proc /sys/vm/min_free_kbytes           u:object_r:proc_vm:s0
 
 genfscon proc /sys/vm/swappiness                u:object_r:proc_vm:s0
 genfscon proc /sys/vm/vfs_cache_pressure        u:object_r:proc_vm:s0
-
+# j2lte MFC (video codec)
+genfscon sysfs /devices/12c30000.mfc0/video4linux   u:object_r:sysfs_v4l:s0
 genfscon proc /reset_reason     u:object_r:proc_reset_reason:s0
 genfscon proc /simslot_count    u:object_r:proc_simslot_count:s0
 
