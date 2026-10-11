@@ -18,6 +18,8 @@ allow sswap sysfs_disk_stat:dir search;
 allow sswap sysfs:file r_file_perms;
 dontaudit macloader self:capability dac_override;
 dontaudit vold hal_bootctl_hwservice:hwservice_manager find;
+dontaudit rild system_data_file:dir { write add_name remove_name };
+dontaudit rild system_data_file:file { read open getattr };
 set_prop(rild, net_radio_prop)
 
 
