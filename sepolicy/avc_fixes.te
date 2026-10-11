@@ -18,6 +18,7 @@ allow sswap sysfs_disk_stat:dir search;
 allow sswap sysfs:file r_file_perms;
 dontaudit macloader self:capability dac_override;
 dontaudit vold hal_bootctl_hwservice:hwservice_manager find;
+set_prop(rild, net_radio_prop)
 
 
 # wificond: /efs/wifi/.mac.info
