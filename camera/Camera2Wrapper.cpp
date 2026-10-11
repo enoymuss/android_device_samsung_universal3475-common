@@ -152,7 +152,7 @@ static int check_vendor_module()
  * Camera2 wrapper fixup functions
  *******************************************************************/
 
-static char * camera2_fixup_getparams(int id __unused, const char * settings) {
+static char * camera2_fixup_getparams(int id, const char * settings) {
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
 
@@ -160,6 +160,15 @@ static char * camera2_fixup_getparams(int id __unused, const char * settings) {
     ALOGV("%s: Original parameters:", __FUNCTION__);
     params.dump();
 #endif
+
+    /* j2lte rear camera: do not offer fixed 7 fps ranges, WhatsApp picks them
+     * and the video call then sends no frames. */
+    if (id == 0) {
+        params.set(android::CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE,
+                "(15000,15000),(15000,30000),(30000,30000)");
+        params.set(android::CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES,
+                "15,30");
+    }
 
 #ifdef LOG_PARAMETERS
     ALOGV("%s: Fixed parameters:", __FUNCTION__);
@@ -172,7 +181,7 @@ static char * camera2_fixup_getparams(int id __unused, const char * settings) {
     return ret;
 }
 
-static char * camera2_fixup_setparams(int id __unused, const char * settings) {
+static char * camera2_fixup_setparams(int id, const char * settings) {
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
 
@@ -180,6 +189,16 @@ static char * camera2_fixup_setparams(int id __unused, const char * settings) {
     ALOGV("%s: Original parameters:", __FUNCTION__);
     params.dump();
 #endif
+
+    /* If an app still asks for a too low fps range on the rear camera, raise it */
+    if (id == 0) {
+        int minFps = 0, maxFps = 0;
+        params.getPreviewFpsRange(&minFps, &maxFps);
+        if (maxFps > 0 && maxFps < 15000) {
+            params.set(android::CameraParameters::KEY_PREVIEW_FPS_RANGE, "15000,30000");
+            params.setPreviewFrameRate(30);
+        }
+    }
 
 #ifdef LOG_PARAMETERS
     ALOGV("%s: Fixed parameters:", __FUNCTION__);
