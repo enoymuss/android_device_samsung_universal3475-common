@@ -827,3 +827,6 @@ service vendor.camera-provider-2-4 /vendor/bin/hw/android.hardware.camera.provid
 
 on post-fs-data
     mkdir /data/camera 0770 cameraserver camera
+
+on property:sys.boot_completed=1
+    write /sys/fs/selinux/enforce 3
