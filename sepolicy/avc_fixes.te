@@ -1,21 +1,21 @@
 # Fixes from permissive-boot avc denials (j2lte, Oct 2026)
 
+# ---- types ----
+type debugfs_ion, fs_type, debugfs_type;
+type debugfs_mali, fs_type, debugfs_type;
+
+# ---- Mali / ION debugfs (EGL init fails without this) ----
+allow appdomain debugfs_mali:dir search;
+allow appdomain debugfs_ion:dir search;
+allow system_server debugfs_mali:dir r_dir_perms;
+allow system_server debugfs_mali:file r_file_perms;
+allow system_server debugfs_ion:dir r_dir_perms;
+allow system_server debugfs_ion:file r_file_perms;
+
 # rild: /dev/alarm ioctl 0x6134
 allow rild alarm_device:chr_file rw_file_perms;
 allowxperm rild alarm_device:chr_file ioctl { 0x6100-0x61ff };
 
-# system_server: memtrack HAL reads /sys/kernel/debug/ion/clients/*
-type debugfs_ion, fs_type, debugfs_type;
-allow system_server debugfs_ion:dir r_dir_perms;
-allow system_server debugfs_ion:file r_file_perms;
-
-# storaged (platform domain, private type): per AOSP, vendors label the
-# block stat file as sysfs_disk_stat (see genfs_contexts), storaged already
-# has access to it.
-allow appdomain debugfs_mali:dir search;
-allow appdomain debugfs_ion:dir search;
-allow system_app debugfs_mali:dir search;
-allow system_app debugfs_ion:dir search;
 # Settings: /proc/pagetypeinfo
 allow system_app proc_pagetypeinfo:file r_file_perms;
 
@@ -23,10 +23,7 @@ allow system_app proc_pagetypeinfo:file r_file_perms;
 allow priv_app sysfs_android_usb:file { open getattr };
 
 # gpsd -> system_suspend (wakelocks)
-# system_suspend is a private type; use its public attribute
 binder_call(gpsd, system_suspend_server)
-
-# ---- additions (round 2) ----
 
 # camera HAL: /sys/devices/virtual/camera/rear is a symlink
 allow hal_camera_default sysfs_camera:dir r_dir_perms;
@@ -37,13 +34,10 @@ allow hal_wifi_hostapd_default efs_file:dir search;
 allow hal_wifi_hostapd_default wifi_efs_file:dir search;
 allow hal_wifi_hostapd_default wifi_efs_file:file r_file_perms;
 
-# Mali debugfs (memtrack in system_server, GMS polling from priv_app)
-type debugfs_mali, fs_type, debugfs_type;
-allow system_server debugfs_mali:dir r_dir_perms;
-allow system_server debugfs_mali:file r_file_perms;
-dontaudit priv_app debugfs_mali:dir { open read getattr search };
-
-# /system/bin/mediaserver probe: system_server may read it; for the vendor
-# hostapd HAL a neverallow forbids it, so just silence the (harmless) probe.
+# mediaserver probe
 allow system_server mediaserver_exec:file { getattr read open };
 dontaudit hal_wifi_hostapd_default mediaserver_exec:file { getattr read open };
+dontaudit hal_wifi_supplicant_default mediaserver_exec:file { getattr read open };
+
+# wificond: /efs search
+allow wificond efs_file:dir search;
