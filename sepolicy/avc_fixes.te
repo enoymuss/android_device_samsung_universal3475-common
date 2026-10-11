@@ -8,6 +8,7 @@ type debugfs_mali, fs_type, debugfs_type;
 allow wificond efs_file:dir search;
 allow wificond wifi_efs_file:dir r_dir_perms;
 allow wificond wifi_efs_file:file r_file_perms;
+allow dnsmasq mediaserver_exec:file { getattr read open };
 
 # ---- Mali / ION debugfs (EGL init fails without this) ----
 allow appdomain debugfs_mali:dir search;
