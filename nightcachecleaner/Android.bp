@@ -1,0 +1,19 @@
+android_app {
+    name: "NightCacheCleaner",
+    srcs: ["src/**/*.java"],
+    platform_apis: true,
+    certificate: "platform",
+    privileged: true,
+    optimize: {
+        enabled: false,
+    },
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+prebuilt_etc {
+    name: "privapp-permissions-nightcachecleaner.xml",
+    src: "privapp-permissions-nightcachecleaner.xml",
+    sub_dir: "permissions",
+}
