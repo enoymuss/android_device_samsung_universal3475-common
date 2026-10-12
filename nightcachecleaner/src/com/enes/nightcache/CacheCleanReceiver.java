@@ -8,7 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.app.usage.StorageStats;
+import android.app.usage.StorageStatsManager;
 import android.os.Environment;
+import android.os.Process;
 import android.os.PowerManager;
 import android.os.StatFs;
 import android.util.Log;
@@ -21,8 +24,10 @@ public class CacheCleanReceiver extends BroadcastReceiver {
     private static final String TAG = "NightCache";
 
     static final String ACTION_CLEAN = "com.enes.nightcache.CLEAN";
-    static final int CLEAN_HOUR = 4;
+    static final int CLEAN_HOUR = 3;
     static final int CLEAN_MINUTE = 0;
+
+    static final long MIN_CACHE_BYTES = 50L * 1024 * 1024;
 
     @Override
     public void onReceive(final Context context, Intent intent) {
@@ -89,23 +94,50 @@ public class CacheCleanReceiver extends BroadcastReceiver {
         PackageManager pm = context.getPackageManager();
         long before = freeBytes();
 
+        int perm = context.checkSelfPermission("android.permission.INTERNAL_DELETE_CACHE_FILES");
+      //  Log.i(TAG, "INTERNAL_DELETE_CACHE_FILES izni: "
+        //        + (perm == PackageManager.PERMISSION_GRANTED ? "VAR" : "YOK"));
+
+        StorageStatsManager ssm =
+                (StorageStatsManager) context.getSystemService(Context.STORAGE_STATS_SERVICE);
+
         List<PackageInfo> pkgs = pm.getInstalledPackages(0);
-        int n = 0;
+        int cleaned = 0, skipped = 0, failed = 0;
         for (PackageInfo p : pkgs) {
             try {
+                if (MIN_CACHE_BYTES > 0) {
+                    long cache;
+                    try {
+                        StorageStats st = ssm.queryStatsForPackage(
+                                p.applicationInfo.storageUuid, p.packageName, Process.myUserHandle());
+                        cache = st.getCacheBytes();
+                    } catch (Throwable t) {
+                        failed++;
+                        Log.w(TAG, "cache boyutu olculemedi, atlandi: " + p.packageName, t);
+                        continue;
+                    }
+                    if (cache < MIN_CACHE_BYTES) {
+                        skipped++;
+                        continue;
+                    }
+                   // Log.i(TAG, p.packageName + " cache " + (cache >> 20) + " MB -> siliniyor");
+                }
                 // @hide API, platform_apis ile derlenir; observer null olabilir
                 pm.deleteApplicationCacheFiles(p.packageName, null);
-                n++;
+                cleaned++;
             } catch (Throwable t) {
+                failed++;
                 Log.w(TAG, "cache silinemedi: " + p.packageName, t);
             }
         }
+        int n = cleaned;
 
         // silme isleri installd'de asenkron biter, kisa bekle
         try { Thread.sleep(20 * 1000L); } catch (InterruptedException ignored) { }
 
         long after = freeBytes();
-        Log.i(TAG, "temizlendi: " + n + " paket, bos alan " + (before >> 20) + " MB -> "
-                + (after >> 20) + " MB");
+     //   Log.i(TAG, "temizlendi: " + n + " paket, esik alti atlanan " + skipped
+       //         + ", hata " + failed + ", bos alan " + (before >> 20) + " MB -> "
+         //       + (after >> 20) + " MB");
     }
 }
