@@ -28,6 +28,12 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.sys.usb.config=mtp
 
 
+#Added an automatic cache cleanup task that runs daily at 4:00 AM to help free up storage space on devices with limited storage (8 GB).
+#If you prefer to keep the cache files, you can disable this feature by commenting out the relevant lines of code.
+PRODUCT_PACKAGES += \
+    NightCacheCleaner \
+    privapp-permissions-nightcachecleaner.xml
+
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/audio/audio_policy.conf:$(TARGET_COPY_OUT_SYSTEM)/etc/audio_policy.conf \
     frameworks/av/services/audiopolicy/config/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_volumes.xml \
