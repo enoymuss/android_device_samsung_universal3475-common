@@ -2,5 +2,7 @@
 <permissions>
     <privapp-permissions package="com.enes.nightcache">
         <permission name="android.permission.DELETE_CACHE_FILES"/>
+        <permission name="android.permission.INTERNAL_DELETE_CACHE_FILES"/>
+        <permission name="android.permission.PACKAGE_USAGE_STATS"/>
     </privapp-permissions>
 </permissions>
