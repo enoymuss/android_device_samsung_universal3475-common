@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.enes.nightcache">
+
+    <uses-permission android:name="android.permission.DELETE_CACHE_FILES" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:label="Night Cache Cleaner"
+        android:allowBackup="false">
+
+        <receiver
+            android:name=".CacheCleanReceiver"
+            android:exported="true"
+            android:permission="android.permission.DELETE_CACHE_FILES">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="com.enes.nightcache.CLEAN" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
